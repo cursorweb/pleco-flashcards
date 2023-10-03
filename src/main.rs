@@ -1,6 +1,6 @@
 use pleco_study::*;
 
 fn main() {
-    let x = parse_flash(read_flash());
+    let x = Reviewer::load_cards("dbg_flash.txt");
     println!("{x:#?}");
 }

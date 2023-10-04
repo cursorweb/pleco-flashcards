@@ -43,7 +43,8 @@ impl Reviewer {
             })
             .collect();
 
-        card_vec.shuffle(&mut thread_rng());
+        let mut t = thread_rng();
+        card_vec.shuffle(&mut t);
 
         let cards = HashMap::from([(0, card_vec)]);
 
@@ -73,7 +74,7 @@ impl Reviewer {
         ))
     }
 
-    /// Make sure this applies to the next reviewer!
+    /// Make sure this is used on the next reviewer!
     pub fn studied_card(&mut self, card: Card, score: i32) {
         if score < self.lowest {
             self.lowest = score;

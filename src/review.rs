@@ -2,7 +2,7 @@ use crate::Card;
 use rand::prelude::*;
 use std::{collections::HashMap, fs};
 
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub struct Reviewer {
     /// current set of cards
     pub cards: HashMap<i32, Vec<Card>>,

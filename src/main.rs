@@ -1,76 +1,32 @@
-use druid::widget::{Align, Button, Either, Flex, Label};
-use druid::{AppLauncher, Data, Env, Widget, WidgetExt, WindowDesc};
-use pleco_study::{Card, Reviewer};
-
-#[derive(Clone, Data)]
-struct CardsState {
-    #[data(ignore)]
-    reviewer: Reviewer,
-    card_data: (i32, Card),
-    reveal_card: bool,
-}
+use eframe::egui;
 
 fn main() {
-    let main_window = WindowDesc::new(build_card())
-        .title("Pleco Card Reviewer")
-        .window_size((400.0, 400.0));
-
-    let initial_state = {
-        let mut reviewer = Reviewer::load_cards("flash.txt");
-        let next_card = reviewer
-            .next_card()
-            .expect("Cards should not start out empty");
-
-        CardsState {
-            reviewer,
-            card_data: next_card,
-            reveal_card: false,
-        }
-    };
-
-    // start the application
-    AppLauncher::with_window(main_window)
-        .launch(initial_state)
-        .expect("Failed to launch application");
-}
-
-fn build_card() -> impl Widget<CardsState> {
-    Either::new(
-        |a: &CardsState, _| a.reveal_card,
-        build_card_back(),
-        build_card_front(),
+    let native_options = eframe::NativeOptions::default();
+    eframe::run_native(
+        "Pleco Card Review",
+        native_options,
+        Box::new(|cc| Box::new(MyEguiApp::new(cc))),
     )
+    .unwrap();
 }
 
-fn build_card_front() -> impl Widget<CardsState> {
-    let simp_label =
-        Label::new(|data: &CardsState, _env: &Env| format!("{}", data.card_data.1.simp))
-            .with_text_size(64.0);
+#[derive(Default)]
+struct MyEguiApp;
 
-    let show_btn = Button::new("Flip").on_click(|_, data: &mut CardsState, _| {
-        data.reveal_card = true;
-    });
-
-    let layout = Flex::column().with_child(simp_label).with_child(show_btn);
-
-    Align::centered(layout)
+impl MyEguiApp {
+    fn new(_: &eframe::CreationContext<'_>) -> Self {
+        // Customize egui here with cc.egui_ctx.set_fonts and cc.egui_ctx.set_visuals.
+        // Restore app state using cc.storage (requires the "persistence" feature).
+        // Use the cc.gl (a glow::Context) to create graphics shaders and buffers that you can use
+        // for e.g. egui::PaintCallback.
+        Self::default()
+    }
 }
 
-fn build_card_back() -> impl Widget<CardsState> {
-    let text_label = Label::new(|data: &CardsState, _env: &Env| {
-        format!("{}[{}]", data.card_data.1.simp, data.card_data.1.trad)
-    })
-    .with_text_size(64.0)
-    .fix_width(200.0);
-
-    let def_label = Label::new(|data: &CardsState, _env: &Env| format!("{}", data.card_data.1.def))
-        .with_text_size(32.0)
-        .fix_width(200.0);
-
-    let layout = Flex::column()
-        .with_child(text_label)
-        .with_child(def_label)
-        .center();
-
-    Align::centered(layout)
+impl eframe::App for MyEguiApp {
+    fn update(&mut self, ctx: &egui::Context, frame: &mut eframe::Frame) {
+        egui::CentralPanel::default().show(ctx, |ui| {
+            ui.heading("Hello World!");
+        });
+    }
 }

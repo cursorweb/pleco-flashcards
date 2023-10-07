@@ -1,6 +1,4 @@
-use druid::Data;
-
-#[derive(Debug, Data, Clone)]
+#[derive(Debug)]
 pub struct Card {
     /// the word to be tested (simplified)
     pub simp: String,

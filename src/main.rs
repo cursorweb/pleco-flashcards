@@ -1,4 +1,11 @@
-use eframe::egui::{self, FontDefinitions};
+use eframe::{
+    egui::{self, FontData, FontDefinitions},
+    epaint::FontFamily,
+};
+use font_kit::{
+    family_name::FamilyName, handle::Handle, properties::Properties, source::SystemSource,
+};
+use pleco_study::{Card, Reviewer};
 
 fn main() {
     let native_options = eframe::NativeOptions::default();
@@ -11,11 +18,10 @@ fn main() {
     .unwrap();
 }
 
-#[derive(Default)]
 struct MyEguiApp {
-    counter: i32,
-    my_string: String,
-    my_f32: f32,
+    reviewer: Reviewer,
+    card: Card,
+    strength: i32,
 }
 
 impl MyEguiApp {
@@ -24,29 +30,48 @@ impl MyEguiApp {
         // Restore app state using cc.storage (requires the "persistence" feature).
         // Use the cc.gl (a glow::Context) to create graphics shaders and buffers that you can use
         // for e.g. egui::PaintCallback.
-        let font_defs = FontDefinitions::default();
-        cc.egui_ctx.set_fonts(font_defs);
-        cc.egui_ctx.set_pixels_per_point(2f32);
-        Self::default()
+
+        let source = SystemSource::new();
+        let font =
+            source.select_best_match(&[FamilyName::Title("kaiti".into())], &Properties::default());
+
+        let handle = font.unwrap().load().unwrap();
+        let handle = handle.handle().unwrap();
+        let Handle::Memory { bytes, .. } = handle else {
+            panic!("uh oh we got a path")
+        };
+
+        let bytes = (*bytes).clone();
+
+        let mut fonts = FontDefinitions::default();
+
+        fonts
+            .font_data
+            .insert("chinese".into(), FontData::from_owned(bytes));
+
+        fonts
+            .families
+            .get_mut(&FontFamily::Proportional)
+            .unwrap()
+            .push("chinese".into());
+
+        cc.egui_ctx.set_fonts(fonts);
+
+        let mut reviewer = Reviewer::load_cards("one_flash.txt");
+        let (strength, card) = reviewer.next_card().expect("Should not be empty");
+
+        Self {
+            reviewer,
+            card,
+            strength,
+        }
     }
 }
 
 impl eframe::App for MyEguiApp {
     fn update(&mut self, ctx: &egui::Context, frame: &mut eframe::Frame) {
         egui::CentralPanel::default().show(ctx, |ui| {
-            ui.vertical(|ui| {
-                ui.hyperlink("https://github.com/emilk/egui");
-
-                ui.label(format!("Count: {}", self.counter));
-
-                if ui.button("+1").clicked() {
-                    self.counter += 1;
-                }
-
-                if ui.button("-1").clicked() {
-                    self.counter -= 1;
-                }
-            });
+            ui.label(&self.card.simp);
         });
     }
 }

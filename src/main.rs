@@ -1,5 +1,5 @@
 use eframe::{
-    egui::{self, FontData, FontDefinitions, RichText, Ui},
+    egui::{self, Align, FontData, FontDefinitions, Layout, RichText, Ui},
     epaint::{FontFamily, Vec2},
 };
 use font_kit::{
@@ -7,13 +7,14 @@ use font_kit::{
 };
 use pleco_study::{Card, Reviewer};
 
-const TITLE_SIZE: f32 = 32.0;
+const TITLE_SIZE: f32 = 64.0;
 const WIDTH: f32 = 400.0;
 const HEIGHT: f32 = 400.0;
 
 fn main() {
     let mut native_options = eframe::NativeOptions::default();
     native_options.initial_window_size = Some(Vec2::new(WIDTH, HEIGHT));
+    native_options.resizable = false;
 
     eframe::run_native(
         "Pleco Card Review",
@@ -81,14 +82,18 @@ impl MyEguiApp {
     }
 
     fn render_front(&mut self, ui: &mut Ui) {
-        ui.with_layout(egui::Layout::bottom_up(egui::Align::Center), |ui| {
+        ui.with_layout(Layout::bottom_up(Align::Center), |ui| {
             if ui.button("Flip").clicked() {
                 self.front_side = false;
             }
 
-            ui.centered_and_justified(|ui| {
-                ui.label(RichText::new(&self.card.simp).size(64.0));
-            });
+            egui::Frame::none()
+                .fill(egui::Color32::from_rgb(123, 123, 233))
+                .show(ui, |ui| {
+                    ui.centered_and_justified(|ui| {
+                        ui.label(RichText::new(&self.card.simp).size(TITLE_SIZE));
+                    });
+                });
         });
     }
 
@@ -104,7 +109,7 @@ impl MyEguiApp {
                     "".into()
                 }
             ))
-            .size(64.0),
+            .size(TITLE_SIZE),
         );
         ui.label(&self.card.def);
 

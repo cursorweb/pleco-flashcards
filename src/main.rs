@@ -1,5 +1,5 @@
 use eframe::{
-    egui::{self, pos2, Align, Color32, FontData, FontDefinitions, Layout, Rect, RichText, Ui},
+    egui::{self, pos2, Color32, FontData, FontDefinitions, Label, Rect, RichText, Ui},
     epaint::{FontFamily, Vec2},
 };
 use font_kit::{
@@ -8,9 +8,26 @@ use font_kit::{
 use pleco_study::{Card, Reviewer};
 
 const TITLE_SIZE: f32 = 64.0;
+const TEXT_SIZE: f32 = 16.0;
+
 const ROUNDING: f32 = 5.0;
+
 const WIDTH: f32 = 400.0;
-const HEIGHT: f32 = 400.0;
+const HEIGHT: f32 = WIDTH;
+
+const MARGIN: f32 = 10.0;
+
+const RATIO: f32 = 0.8;
+
+const CARD_RECT: Rect = Rect::from_min_max(
+    pos2(MARGIN, MARGIN),
+    pos2(WIDTH - MARGIN, HEIGHT * RATIO - MARGIN),
+);
+
+const BUTTON_RECT: Rect = Rect::from_min_max(
+    pos2(MARGIN, HEIGHT * RATIO),
+    pos2(WIDTH - MARGIN, HEIGHT - MARGIN),
+);
 
 fn main() {
     let mut native_options = eframe::NativeOptions::default();
@@ -84,82 +101,131 @@ impl MyEguiApp {
             reviewer,
             card,
             strength,
-            front_side: true,
+            front_side: false,
             next_reviewer: Reviewer::new(),
         }
     }
 
     fn render_front(&mut self, ui: &mut Ui) {
-        if ui.button("Flip").clicked() {
-            //
-        }
-
-        let card_rect = Rect::from_min_max(pos2(10.0, 10.0), pos2(WIDTH - 10.0, HEIGHT - 10.0));
-
         let frame = egui::Frame::none()
             .fill(Color32::from_rgb(123, 123, 233))
             .rounding(ROUNDING)
-            .paint(card_rect);
+            .paint(CARD_RECT);
 
         ui.painter().add(frame);
         ui.put(
-            card_rect,
-            egui::Label::new(RichText::new(&self.card.simp).size(TITLE_SIZE)),
+            CARD_RECT,
+            Label::new(RichText::new(&self.card.simp).size(TITLE_SIZE)),
         );
 
-        // ui.put(frame);
-        // ui.with_layout(Layout::bottom_up(Align::Center), |ui| {
-        //     if ui.button("Flip").clicked() {
-        //         self.front_side = false;
-        //     }
-
-        //     egui::Frame::none()
-        //         .fill(Color32::from_rgb(123, 123, 233))
-        //         .rounding(ROUNDING)
-        //         .show(ui, |ui| {
-        //             ui.centered_and_justified(|ui| {
-        //                 ui.label(RichText::new(&self.card.simp).size(TITLE_SIZE));
-        //             });
-        //         });
-        // });
+        let button = egui::Button::new("Flip");
+        if ui.put(BUTTON_RECT, button).clicked() {
+            self.front_side = false;
+        }
     }
 
     fn render_back(&mut self, ui: &mut Ui) {
-        ui.with_layout(Layout::bottom_up(Align::Center), |ui| {
-            if ui.button("Next").clicked() {
-                let (next_strength, mut next_card) = self.reviewer.next_card().expect("All done!");
+        let frame = egui::Frame::none()
+            .fill(Color32::from_rgb(6, 209, 20))
+            .rounding(ROUNDING)
+            .paint(CARD_RECT);
 
-                std::mem::swap(&mut self.card, &mut next_card);
-                let old_card = next_card;
-                self.next_reviewer.studied_card(old_card, self.strength);
-                self.strength = next_strength;
+        ui.painter().add(frame);
 
-                self.front_side = true;
-            }
+        self.create_cont_card(
+            ui,
+            Rect::from_min_max(
+                pos2(MARGIN * 2.0, MARGIN * 2.0),
+                pos2(WIDTH - MARGIN * 2.0, TEXT_SIZE + MARGIN * 3.0),
+            ),
+            Color32::from_rgb(234, 123, 231),
+            &self.card.pinyin,
+            TEXT_SIZE,
+        );
 
-            egui::Frame::none()
-                .fill(Color32::from_rgb(6, 209, 20))
-                .rounding(ROUNDING)
-                .show(ui, |ui| {
-                    ui.vertical_centered_justified(|ui| {
-                        ui.label(&self.card.pinyin);
-                        ui.label(
-                            RichText::new(format!(
-                                "{}{}",
-                                self.card.simp,
-                                if self.card.simp != self.card.trad {
-                                    format!("[{}]", self.card.trad)
-                                } else {
-                                    "".into()
-                                }
-                            ))
-                            .size(TITLE_SIZE),
-                        );
-                        ui.label(&self.card.def);
-                    });
-                });
-            // });
-        });
+        self.create_cont_card(
+            ui,
+            Rect::from_min_max(
+                pos2(MARGIN * 2.0, TEXT_SIZE + MARGIN * 4.0),
+                pos2(
+                    WIDTH - MARGIN * 2.0,
+                    TITLE_SIZE + MARGIN + TEXT_SIZE + MARGIN * 4.0,
+                ),
+            ),
+            Color32::from_rgb(255, 255, 255),
+            format!(
+                "{}{}",
+                self.card.simp,
+                if self.card.simp != self.card.trad {
+                    format!("[{}]", self.card.trad)
+                } else {
+                    "".into()
+                }
+            ),
+            TITLE_SIZE,
+        );
+
+        /*
+        let frame = egui::Frame::none()
+            .fill(Color32::from_rgb(255, 255, 255))
+            .rounding(ROUNDING)
+            .paint(top);
+
+        ui.painter().add(frame);
+
+        ui.put(
+            top,
+            Label::new(
+                RichText::new(format!(
+                    "{}{}",
+                    self.card.simp,
+                    if self.card.simp != self.card.trad {
+                        format!("[{}]", self.card.trad)
+                    } else {
+                        "".into()
+                    }
+                ))
+                .size(TITLE_SIZE),
+            ),
+        );
+        */
+
+        let button = egui::Button::new("Next Card");
+        if ui.put(BUTTON_RECT, button).clicked() {
+            let (next_strength, mut next_card) = self.reviewer.next_card().expect("All done!");
+
+            std::mem::swap(&mut self.card, &mut next_card);
+            let old_card = next_card;
+            self.next_reviewer.studied_card(old_card, self.strength);
+            self.strength = next_strength;
+
+            self.front_side = true;
+        }
+    }
+
+    /// create a container with text
+    fn create_cont_card(
+        &self,
+        ui: &mut Ui,
+        rect: Rect,
+        color: Color32,
+        text: impl Into<String>,
+        text_size: f32,
+    ) {
+        let frame = egui::Frame::none()
+            .fill(color)
+            .rounding(ROUNDING)
+            .paint(rect);
+
+        ui.painter().add(frame);
+
+        ui.put(
+            rect,
+            Label::new(
+                RichText::new(text).size(text_size),
+                // .background_color(Color32::RED),
+            ),
+        );
     }
 }
 

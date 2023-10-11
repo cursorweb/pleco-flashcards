@@ -1,5 +1,5 @@
 use eframe::{
-    egui::{self, Align, Color32, FontData, FontDefinitions, Layout, RichText, Ui},
+    egui::{self, pos2, Align, Color32, FontData, FontDefinitions, Layout, Rect, RichText, Ui},
     epaint::{FontFamily, Vec2},
 };
 use font_kit::{
@@ -15,7 +15,7 @@ const HEIGHT: f32 = 400.0;
 fn main() {
     let mut native_options = eframe::NativeOptions::default();
     native_options.initial_window_size = Some(Vec2::new(WIDTH, HEIGHT));
-    // native_options.resizable = false;
+    native_options.resizable = false;
 
     eframe::run_native(
         "Pleco Card Review",
@@ -90,20 +90,38 @@ impl MyEguiApp {
     }
 
     fn render_front(&mut self, ui: &mut Ui) {
-        ui.with_layout(Layout::bottom_up(Align::Center), |ui| {
-            if ui.button("Flip").clicked() {
-                self.front_side = false;
-            }
+        if ui.button("Flip").clicked() {
+            //
+        }
 
-            egui::Frame::none()
-                .fill(Color32::from_rgb(123, 123, 233))
-                .rounding(ROUNDING)
-                .show(ui, |ui| {
-                    ui.centered_and_justified(|ui| {
-                        ui.label(RichText::new(&self.card.simp).size(TITLE_SIZE));
-                    });
-                });
-        });
+        let card_rect = Rect::from_min_max(pos2(10.0, 10.0), pos2(WIDTH - 10.0, HEIGHT - 10.0));
+
+        let frame = egui::Frame::none()
+            .fill(Color32::from_rgb(123, 123, 233))
+            .rounding(ROUNDING)
+            .paint(card_rect);
+
+        ui.painter().add(frame);
+        ui.put(
+            card_rect,
+            egui::Label::new(RichText::new(&self.card.simp).size(TITLE_SIZE)),
+        );
+
+        // ui.put(frame);
+        // ui.with_layout(Layout::bottom_up(Align::Center), |ui| {
+        //     if ui.button("Flip").clicked() {
+        //         self.front_side = false;
+        //     }
+
+        //     egui::Frame::none()
+        //         .fill(Color32::from_rgb(123, 123, 233))
+        //         .rounding(ROUNDING)
+        //         .show(ui, |ui| {
+        //             ui.centered_and_justified(|ui| {
+        //                 ui.label(RichText::new(&self.card.simp).size(TITLE_SIZE));
+        //             });
+        //         });
+        // });
     }
 
     fn render_back(&mut self, ui: &mut Ui) {

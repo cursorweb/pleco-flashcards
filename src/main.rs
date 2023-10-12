@@ -8,7 +8,7 @@ use font_kit::{
 use pleco_study::{Card, Reviewer};
 
 const TITLE_SIZE: f32 = 64.0;
-const TEXT_SIZE: f32 = 16.0;
+const TEXT_SIZE: f32 = 20.0;
 
 const ROUNDING: f32 = 5.0;
 
@@ -145,7 +145,7 @@ impl MyEguiApp {
         );
 
         // simp[trad]
-        self.create_cont_card(
+        self.create_scroll_card(
             ui,
             Rect::from_min_max(
                 pos2(MARGIN * 2.0, TEXT_SIZE + MARGIN * 4.0),
@@ -168,38 +168,22 @@ impl MyEguiApp {
         );
 
         let rect = Rect::from_min_max(
-            pos2(MARGIN * 2.0, TEXT_SIZE + MARGIN * 8.0),
-            pos2(
-                WIDTH - MARGIN * 2.0,
-                TITLE_SIZE + MARGIN + TEXT_SIZE + MARGIN * 12.0,
-            ),
+            pos2(MARGIN * 2.0, TITLE_SIZE + MARGIN + TEXT_SIZE + MARGIN * 5.0),
+            pos2(WIDTH - MARGIN * 2.0, HEIGHT * RATIO - MARGIN * 2.0),
         );
+
         let frame = egui::Frame::none()
-            .fill(Color32::from_rgb(49, 39, 12))
+            .fill(Color32::from_rgb(130, 176, 255))
             .rounding(ROUNDING)
             .paint(rect);
 
         ui.painter().add(frame);
 
-        let rect = Rect::from_min_max(
-            pos2(MARGIN * 2.0, TEXT_SIZE + MARGIN * 8.0),
-            pos2(
-                WIDTH - MARGIN * 2.0,
-                TITLE_SIZE + MARGIN + TEXT_SIZE + MARGIN * 12.0,
-            ),
-        );
-        let frame = egui::Frame::none()
-            .fill(Color32::from_rgb(49, 39, 12))
-            .rounding(ROUNDING)
-            .paint(rect);
-
-        ui.painter().add(frame);
-
-        egui::ScrollArea::vertical()
-            .max_height(100f32)
-            .show(ui, |ui| {
-                ui.label("something something".repeat(99));
+        ui.allocate_ui_at_rect(rect, |ui| {
+            egui::ScrollArea::vertical().show(ui, |ui| {
+                ui.add(Label::new(RichText::new(&self.card.def).size(TEXT_SIZE)));
             });
+        });
 
         let button = egui::Button::new("Next Card");
         if ui.put(BUTTON_RECT, button).clicked() {
@@ -230,13 +214,38 @@ impl MyEguiApp {
 
         ui.painter().add(frame);
 
-        ui.put(
-            rect,
-            Label::new(
-                RichText::new(text).size(text_size),
-                // .background_color(Color32::RED),
-            ),
-        );
+        ui.put(rect, Label::new(RichText::new(text).size(text_size)));
+    }
+
+    fn create_scroll_card(
+        &self,
+        ui: &mut Ui,
+        rect: Rect,
+        color: Color32,
+        text: impl Into<String>,
+        text_size: f32,
+    ) {
+        let frame = egui::Frame::none()
+            .fill(color)
+            .rounding(ROUNDING)
+            .paint(rect);
+
+        ui.painter().add(frame);
+
+        ui.push_id(32, |ui| {
+            ui.allocate_ui_at_rect(rect, |ui| {
+                egui::ScrollArea::horizontal()
+                    .max_width(rect.width())
+                    .show(ui, |ui| {
+                        ui.scope(|ui| {
+                            ui.style_mut().wrap = Some(false);
+                            ui.centered_and_justified(|ui| {
+                                ui.add(Label::new(RichText::new(text).size(text_size)));
+                            });
+                        });
+                    });
+            });
+        });
     }
 }
 

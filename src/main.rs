@@ -94,7 +94,7 @@ impl MyEguiApp {
             style.visuals.override_text_color = Some(Color32::BLACK);
         });
 
-        let mut reviewer = Reviewer::load_cards("flash.txt");
+        let mut reviewer = Reviewer::load_cards("one_flash.txt");
         let (strength, card) = reviewer.next_card().expect("Should not be empty");
 
         Self {
@@ -132,6 +132,7 @@ impl MyEguiApp {
 
         ui.painter().add(frame);
 
+        // pinyin
         self.create_cont_card(
             ui,
             Rect::from_min_max(
@@ -143,6 +144,7 @@ impl MyEguiApp {
             TEXT_SIZE,
         );
 
+        // simp[trad]
         self.create_cont_card(
             ui,
             Rect::from_min_max(
@@ -165,30 +167,39 @@ impl MyEguiApp {
             TITLE_SIZE,
         );
 
-        /*
+        let rect = Rect::from_min_max(
+            pos2(MARGIN * 2.0, TEXT_SIZE + MARGIN * 8.0),
+            pos2(
+                WIDTH - MARGIN * 2.0,
+                TITLE_SIZE + MARGIN + TEXT_SIZE + MARGIN * 12.0,
+            ),
+        );
         let frame = egui::Frame::none()
-            .fill(Color32::from_rgb(255, 255, 255))
+            .fill(Color32::from_rgb(49, 39, 12))
             .rounding(ROUNDING)
-            .paint(top);
+            .paint(rect);
 
         ui.painter().add(frame);
 
-        ui.put(
-            top,
-            Label::new(
-                RichText::new(format!(
-                    "{}{}",
-                    self.card.simp,
-                    if self.card.simp != self.card.trad {
-                        format!("[{}]", self.card.trad)
-                    } else {
-                        "".into()
-                    }
-                ))
-                .size(TITLE_SIZE),
+        let rect = Rect::from_min_max(
+            pos2(MARGIN * 2.0, TEXT_SIZE + MARGIN * 8.0),
+            pos2(
+                WIDTH - MARGIN * 2.0,
+                TITLE_SIZE + MARGIN + TEXT_SIZE + MARGIN * 12.0,
             ),
         );
-        */
+        let frame = egui::Frame::none()
+            .fill(Color32::from_rgb(49, 39, 12))
+            .rounding(ROUNDING)
+            .paint(rect);
+
+        ui.painter().add(frame);
+
+        egui::ScrollArea::vertical()
+            .max_height(100f32)
+            .show(ui, |ui| {
+                ui.label("something something".repeat(99));
+            });
 
         let button = egui::Button::new("Next Card");
         if ui.put(BUTTON_RECT, button).clicked() {

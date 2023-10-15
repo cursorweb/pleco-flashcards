@@ -191,6 +191,8 @@ impl MyEguiApp {
 
             std::mem::swap(&mut self.card, &mut next_card);
             let old_card = next_card;
+
+            // todo: change self.strength
             self.next_reviewer.studied_card(old_card, self.strength);
             self.strength = next_strength;
 

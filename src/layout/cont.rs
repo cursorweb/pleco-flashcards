@@ -3,9 +3,7 @@ use eframe::{
     epaint::Color32,
 };
 
-use crate::rect;
-
-use super::config::ROUNDING;
+use crate::config::ROUNDING;
 
 pub struct Cont {
     rect: Rect,
@@ -13,11 +11,8 @@ pub struct Cont {
 }
 
 impl Cont {
-    pub fn new(x: f32, y: f32, width: f32, height: f32, color: Color32) -> Self {
-        Self {
-            rect: rect(x, y, x + width, y + height),
-            color,
-        }
+    pub fn new(rect: Rect, color: Color32) -> Self {
+        Self { rect, color }
     }
 
     fn draw_frame(&self, ui: &mut Ui) {

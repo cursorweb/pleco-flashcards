@@ -1,8 +1,8 @@
-mod config;
+pub mod config;
 mod cont;
-mod layout;
 mod util;
+mod vlayout;
 
 pub use cont::*;
-pub use layout::*;
 pub use util::*;
+pub use vlayout::*;

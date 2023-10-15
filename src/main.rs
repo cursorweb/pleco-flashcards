@@ -5,19 +5,10 @@ use eframe::{
 use font_kit::{
     family_name::FamilyName, handle::Handle, properties::Properties, source::SystemSource,
 };
-use pleco_study::{Card, Reviewer};
 
-const TITLE_SIZE: f32 = 64.0;
-const TEXT_SIZE: f32 = 20.0;
+use pleco_study::{color, config::*, Card, Cont, Reviewer, VLayout};
 
-const ROUNDING: f32 = 5.0;
-
-const WIDTH: f32 = 400.0;
-const HEIGHT: f32 = WIDTH;
-
-const MARGIN: f32 = 10.0;
-
-const RATIO: f32 = 0.8;
+const RATIO: f32 = 0.75;
 
 const CARD_RECT: Rect = Rect::from_min_max(
     pos2(MARGIN, MARGIN),
@@ -94,7 +85,7 @@ impl MyEguiApp {
             style.visuals.override_text_color = Some(Color32::BLACK);
         });
 
-        let mut reviewer = Reviewer::load_cards("one_flash.txt");
+        let mut reviewer = Reviewer::load_cards("flash.txt");
         let (strength, card) = reviewer.next_card().expect("Should not be empty");
 
         Self {
@@ -107,21 +98,19 @@ impl MyEguiApp {
     }
 
     fn render_front(&mut self, ui: &mut Ui) {
-        let frame = egui::Frame::none()
-            .fill(Color32::from_rgb(123, 123, 233))
-            .rounding(ROUNDING)
-            .paint(CARD_RECT);
+        let mut layout = VLayout::new();
 
-        ui.painter().add(frame);
-        ui.put(
-            CARD_RECT,
-            Label::new(RichText::new(&self.card.simp).size(TITLE_SIZE)),
-        );
+        layout.ratio(RATIO, |rect| {
+            let cont = Cont::new(rect, color(123, 123, 233));
+            cont.add_text(ui, &self.card.simp, TITLE_SIZE);
+        });
 
-        let button = egui::Button::new("Flip");
-        if ui.put(BUTTON_RECT, button).clicked() {
-            self.front_side = false;
-        }
+        layout.rest(|rect| {
+            let button = egui::Button::new("Flip");
+            if ui.put(rect, button).clicked() {
+                self.front_side = false;
+            }
+        });
     }
 
     fn render_back(&mut self, ui: &mut Ui) {

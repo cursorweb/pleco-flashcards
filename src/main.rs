@@ -1,5 +1,5 @@
 use eframe::{
-    egui::{self, pos2, Color32, FontData, FontDefinitions, Label, Rect, RichText, Ui},
+    egui::{self, Color32, FontData, FontDefinitions, Frame, Ui},
     epaint::{FontFamily, Vec2},
 };
 use font_kit::{
@@ -9,16 +9,6 @@ use font_kit::{
 use pleco_study::{color, config::*, Card, Cont, Reviewer, VLayout};
 
 const RATIO: f32 = 0.75;
-
-const CARD_RECT: Rect = Rect::from_min_max(
-    pos2(MARGIN, MARGIN),
-    pos2(WIDTH - MARGIN, HEIGHT * RATIO - MARGIN),
-);
-
-const BUTTON_RECT: Rect = Rect::from_min_max(
-    pos2(MARGIN, HEIGHT * RATIO),
-    pos2(WIDTH - MARGIN, HEIGHT - MARGIN),
-);
 
 fn main() {
     let mut native_options = eframe::NativeOptions::default();
@@ -113,6 +103,76 @@ impl MyEguiApp {
         });
     }
 
+    fn render_back(&mut self, ui: &mut Ui) {
+        let mut layout = VLayout::new();
+
+        layout.ratio(RATIO, |rect| {
+            let def = Cont::new(rect, color(6, 209, 20));
+            def.add_ui(ui, |ui, rect| {
+                let mut layout = VLayout::from(rect);
+
+                layout.ratio(0.1, |rect| {
+                    // println!("{rect:?}");
+                    // panic!();
+                    let pinyin = Cont::new(rect, color(234, 123, 231));
+                    pinyin.add_text(ui, &self.card.pinyin, TEXT_SIZE);
+                });
+
+                layout.ratio(0.3, |rect| {
+                    let word = Cont::new(rect, color(255, 255, 255));
+                    word.add_text(ui, &self.card.trad, TITLE_SIZE);
+                });
+
+                layout.rest(|rect| {
+                    let word = Cont::new(rect, color(130, 176, 255));
+                    word.add_text(ui, &self.card.def, TEXT_SIZE);
+                });
+
+                if false {
+                    use pleco_study::rect as r;
+                    let value = rect;
+
+                    let x = Frame::none().fill(color(255, 0, 0)).paint(value);
+                    ui.painter().add(x);
+
+                    let x = value.left() + MARGIN;
+                    let y = value.top() + MARGIN;
+                    let right = value.right();
+                    let bottom = value.bottom() - MARGIN;
+
+                    let ratio = 0.2;
+                    let remaining = (bottom - y) * ratio;
+                    let width = right;
+                    let height = remaining;
+
+                    let rect = r(x, y, width, y + height);
+                    let x = Frame::none().fill(color(12, 166, 7)).paint(rect);
+                    ui.painter().add(x);
+                    // println!("actual     : [[20.0 20.0] - [370.0 73.0]]");
+                    // println!("calculated : {rect:?}");
+                    // panic!();
+                }
+            });
+        });
+
+        layout.rest(|rect| {
+            let button = egui::Button::new("Next Card");
+            if ui.put(rect, button).clicked() {
+                let (next_strength, mut next_card) = self.reviewer.next_card().expect("All done!");
+
+                std::mem::swap(&mut self.card, &mut next_card);
+                let old_card = next_card;
+
+                // todo: change self.strength
+                self.next_reviewer.studied_card(old_card, self.strength);
+                self.strength = next_strength;
+
+                self.front_side = true;
+            }
+        });
+    }
+
+    /*
     fn render_back(&mut self, ui: &mut Ui) {
         let frame = egui::Frame::none()
             .fill(Color32::from_rgb(6, 209, 20))
@@ -238,6 +298,7 @@ impl MyEguiApp {
             });
         });
     }
+    */
 }
 
 impl eframe::App for MyEguiApp {

@@ -1,5 +1,5 @@
 use eframe::{
-    egui::{self, Color32, FontData, FontDefinitions, Frame, Ui},
+    egui::{self, Color32, FontData, FontDefinitions, Ui},
     epaint::{FontFamily, Vec2},
 };
 use font_kit::{
@@ -127,31 +127,6 @@ impl MyEguiApp {
                     let word = Cont::new(rect, color(130, 176, 255));
                     word.add_text(ui, &self.card.def, TEXT_SIZE);
                 });
-
-                if false {
-                    use pleco_study::rect as r;
-                    let value = rect;
-
-                    let x = Frame::none().fill(color(255, 0, 0)).paint(value);
-                    ui.painter().add(x);
-
-                    let x = value.left() + MARGIN;
-                    let y = value.top() + MARGIN;
-                    let right = value.right();
-                    let bottom = value.bottom() - MARGIN;
-
-                    let ratio = 0.2;
-                    let remaining = (bottom - y) * ratio;
-                    let width = right;
-                    let height = remaining;
-
-                    let rect = r(x, y, width, y + height);
-                    let x = Frame::none().fill(color(12, 166, 7)).paint(rect);
-                    ui.painter().add(x);
-                    // println!("actual     : [[20.0 20.0] - [370.0 73.0]]");
-                    // println!("calculated : {rect:?}");
-                    // panic!();
-                }
             });
         });
 

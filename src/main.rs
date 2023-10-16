@@ -6,7 +6,7 @@ use font_kit::{
     family_name::FamilyName, handle::Handle, properties::Properties, source::SystemSource,
 };
 
-use pleco_study::{color, config::*, Card, Cont, Reviewer, VLayout};
+use pleco_study::{color, config::*, scroll_area, text_label, Card, Cont, Reviewer, VLayout};
 
 const RATIO: f32 = 0.75;
 
@@ -75,7 +75,7 @@ impl MyEguiApp {
             style.visuals.override_text_color = Some(Color32::BLACK);
         });
 
-        let mut reviewer = Reviewer::load_cards("flash.txt");
+        let mut reviewer = Reviewer::load_cards("one_flash.txt");
         let (strength, card) = reviewer.next_card().expect("Should not be empty");
 
         Self {
@@ -112,20 +112,79 @@ impl MyEguiApp {
                 let mut layout = VLayout::from(rect);
 
                 layout.ratio(0.1, |rect| {
-                    // println!("{rect:?}");
-                    // panic!();
                     let pinyin = Cont::new(rect, color(234, 123, 231));
                     pinyin.add_text(ui, &self.card.pinyin, TEXT_SIZE);
                 });
 
                 layout.ratio(0.3, |rect| {
                     let word = Cont::new(rect, color(255, 255, 255));
-                    word.add_text(ui, &self.card.trad, TITLE_SIZE);
+                    let label = text_label(
+                        format!(
+                            "{}{}",
+                            self.card.simp,
+                            if self.card.simp != self.card.trad {
+                                format!("[{}]", self.card.trad)
+                            } else {
+                                "".into()
+                            }
+                        ),
+                        TITLE_SIZE,
+                        false,
+                    );
+
+                    let label_rect = label.layout_in_ui(ui).2.rect;
+
+                    let label = text_label(
+                        format!(
+                            "{}{}",
+                            self.card.simp,
+                            if self.card.simp != self.card.trad {
+                                format!("[{}]", self.card.trad)
+                            } else {
+                                "".into()
+                            }
+                        ),
+                        TITLE_SIZE,
+                        false,
+                    );
+
+                    word.add_ui(ui, |ui, rect| {
+                        if label_rect.width() >= rect.width() {
+                            scroll_area(
+                                ui,
+                                "left-word",
+                                rect,
+                                |ui| {
+                                    ui.add(label);
+                                },
+                                [true, false],
+                            );
+                        } else {
+                            ui.put(rect, label);
+                        }
+                    });
                 });
 
                 layout.rest(|rect| {
-                    let word = Cont::new(rect, color(130, 176, 255));
-                    word.add_text(ui, &self.card.def, TEXT_SIZE);
+                    let def = Cont::new(rect, color(130, 176, 255));
+                    def.add_ui(ui, |ui, rect| {
+                        let rect = pleco_study::rect(
+                            rect.left() + MARGIN,
+                            rect.top() + MARGIN,
+                            rect.right(),
+                            rect.bottom(),
+                        );
+
+                        scroll_area(
+                            ui,
+                            "defn-scroll",
+                            rect,
+                            |ui| {
+                                ui.add(text_label(&self.card.def, TEXT_SIZE, true));
+                            },
+                            [false, true],
+                        );
+                    });
                 });
             });
         });

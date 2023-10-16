@@ -24,7 +24,7 @@ impl Cont {
         ui.painter().add(frame);
     }
 
-    pub fn add_text(&self, ui: &mut Ui, text: &str, text_size: f32) {
+    pub fn add_text(&self, ui: &mut Ui, text: impl Into<String>, text_size: f32) {
         self.draw_frame(ui);
         ui.put(self.rect, Label::new(RichText::new(text).size(text_size)));
     }

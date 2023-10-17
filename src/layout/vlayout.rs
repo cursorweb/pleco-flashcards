@@ -44,6 +44,17 @@ impl VLayout {
         draw(rect);
     }
 
+    pub fn dbg_cursor(&self, ui: &mut eframe::egui::Ui) {
+        use eframe::egui::Frame;
+        let frame = Frame::none().fill(crate::color(255, 0, 0)).paint(rect_wh(
+            self.x_offset,
+            self.y_offset,
+            self.remw(),
+            20.0,
+        ));
+        ui.painter().add(frame);
+    }
+
     /// Calculates height based on ratio of remaining space
     pub fn ratio(&mut self, ratio: f32, draw: impl FnOnce(Rect)) {
         let height = self.remh() * ratio;

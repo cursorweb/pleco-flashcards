@@ -1,79 +1,92 @@
 use eframe::egui::Rect;
 
-use crate::rect;
+use crate::rect_wh;
 
 use super::config::*;
 
 /// Vertical layout
 pub struct VLayout {
     // position of div
-    top: f32,
-    left: f32,
     right: f32,
     bottom: f32,
 
-    // margin aka offset
-    x_margin: f32,
-    y_margin: f32,
+    x_offset: f32,
+    y_offset: f32,
 }
 
 impl VLayout {
     pub fn new() -> Self {
         Self {
-            top: 0.0,
-            left: 0.0,
             right: WIDTH,
             bottom: HEIGHT,
 
-            x_margin: MARGIN,
-            y_margin: MARGIN,
+            x_offset: 0.0,
+            y_offset: 0.0,
         }
     }
 
-    /// The width will be automatically truncated
-    /// using formula: `width - self.x`
-    pub fn draw(&mut self, width: f32, height: f32, draw: impl FnOnce(Rect)) {
-        let rect = rect(
-            self.left + self.x_margin,
-            self.top + self.y_margin,
-            width - self.x_margin,
-            self.top + self.y_margin + height,
+    /// Create a rect from the offsets
+    /// Automatically downscaled to have a bit of margin around itself
+    fn draw(&self, width: f32, height: f32, draw: impl FnOnce(Rect)) {
+        let rect = rect_wh(
+            self.x_offset + MARGIN / 2.0,
+            self.y_offset + MARGIN / 2.0,
+            width - MARGIN,
+            height - MARGIN,
         );
 
-        draw(rect);
+        // println!(
+        //     "width: {width} : drawing from x1={} to x2={}",
+        //     self.left + self.x_offset,
+        //     self.left + self.x_offset + width - MARGIN
+        // );
 
-        self.y_margin += height + MARGIN;
+        draw(rect);
     }
 
     /// Calculates height based on ratio of remaining space
     pub fn ratio(&mut self, ratio: f32, draw: impl FnOnce(Rect)) {
-        let remaining = (self.bottom - self.y_margin) * ratio;
-        self.draw(self.right, remaining, draw);
+        let height = self.remh() * ratio;
+        self.draw(self.remw(), height, draw);
+        self.y_offset += height;
+    }
+
+    /// vertical ratio (as opposed to horizontal stacks)
+    /// uses rest of height ...
+    pub fn ratio_vsplit(&mut self, ratio: f32, draw: impl FnOnce(Rect)) {
+        // println!("before xo: {}/{WIDTH}", self.x_offset);
+        let width = self.remw() * ratio;
+
+        self.draw(width, self.remh(), draw);
+
+        self.x_offset += width;
+        // println!("after xo: {}/{WIDTH}", self.x_offset);
     }
 
     /// Gives rest of height
     pub fn rest(self, draw: impl FnOnce(Rect)) {
-        let rect = rect(
-            self.left + self.x_margin,
-            self.top + self.y_margin,
-            self.right - self.x_margin,
-            self.bottom - MARGIN,
-        );
+        self.draw(self.remw(), self.remh(), draw);
+    }
 
-        draw(rect);
+    /// remaining width
+    fn remw(&self) -> f32 {
+        self.right - self.x_offset
+    }
+
+    /// remaining height
+    fn remh(&self) -> f32 {
+        self.bottom - self.y_offset
     }
 }
 
 impl From<Rect> for VLayout {
     fn from(value: Rect) -> Self {
         Self {
-            left: value.left(),
-            top: value.top(),
             right: value.right(),
             bottom: value.bottom(),
 
-            x_margin: MARGIN,
-            y_margin: MARGIN,
+            x_offset: value.left(),
+            y_offset: value.top(),
         }
     }
 }

@@ -118,7 +118,7 @@ impl MyEguiApp {
                 });
 
                 // hanzi
-                layout.ratio(0.3, |rect| {
+                layout.ratio(0.35, |rect| {
                     let word = Cont::new(rect, color(255, 255, 255));
                     let label = text_label(
                         format!(
@@ -172,7 +172,7 @@ impl MyEguiApp {
                 layout.rest(|rect| {
                     let def = Cont::new(rect, color(130, 176, 255));
                     def.add_ui(ui, |ui, rect| {
-                        let rect = pleco_study::rect(
+                        let rect = pleco_study::rect_c(
                             rect.left() + MARGIN,
                             rect.top() + MARGIN,
                             rect.right(),
@@ -193,7 +193,26 @@ impl MyEguiApp {
             });
         });
 
-        layout.rest(|rect| {
+        {
+            // use pleco_study::rect as r;
+
+            // let rect = r(MARGIN, MARGIN, WIDTH - MARGIN, 200.0);
+
+            // let frame = egui::Frame::none().fill(color(0, 0, 0)).paint(rect);
+            // ui.painter().add(frame);
+
+            // let rect = r(MARGIN, MARGIN, WIDTH / 2.0 - MARGIN, 200.0);
+
+            // let frame = egui::Frame::none().fill(color(99, 3, 64)).paint(rect);
+            // ui.painter().add(frame);
+
+            // let rect = r(MARGIN + WIDTH / 2.0 - MARGIN, MARGIN, WIDTH - MARGIN, 200.0);
+
+            // let frame = egui::Frame::none().fill(color(99, 3, 64)).paint(rect);
+            // ui.painter().add(frame);
+        }
+
+        layout.ratio_vsplit(0.5, |rect| {
             let button = egui::Button::new("Next Card");
             if ui.put(rect, button).clicked() {
                 let (next_strength, mut next_card) = self.reviewer.next_card().expect("All done!");
@@ -208,135 +227,24 @@ impl MyEguiApp {
                 self.front_side = true;
             }
         });
-    }
 
-    /*
-    fn render_back(&mut self, ui: &mut Ui) {
-        let frame = egui::Frame::none()
-            .fill(Color32::from_rgb(6, 209, 20))
-            .rounding(ROUNDING)
-            .paint(CARD_RECT);
+        layout.ratio_vsplit(1.0, |rect| {
+            let button = egui::Button::new("Correct");
+            if ui.put(rect, button).clicked() {
+                // let (next_strength, mut next_card) = self.reviewer.next_card().expect("All done!");
 
-        ui.painter().add(frame);
+                // std::mem::swap(&mut self.card, &mut next_card);
+                // let old_card = next_card;
 
-        // pinyin
-        self.create_cont_card(
-            ui,
-            Rect::from_min_max(
-                pos2(MARGIN * 2.0, MARGIN * 2.0),
-                pos2(WIDTH - MARGIN * 2.0, TEXT_SIZE + MARGIN * 3.0),
-            ),
-            Color32::from_rgb(234, 123, 231),
-            &self.card.pinyin,
-            TEXT_SIZE,
-        );
+                // // todo: change self.strength
+                // self.next_reviewer.studied_card(old_card, self.strength);
+                // self.strength = next_strength;
 
-        // simp[trad]
-        self.create_scroll_card(
-            ui,
-            Rect::from_min_max(
-                pos2(MARGIN * 2.0, TEXT_SIZE + MARGIN * 4.0),
-                pos2(
-                    WIDTH - MARGIN * 2.0,
-                    TITLE_SIZE + MARGIN + TEXT_SIZE + MARGIN * 4.0,
-                ),
-            ),
-            Color32::from_rgb(255, 255, 255),
-            format!(
-                "{}{}",
-                self.card.simp,
-                if self.card.simp != self.card.trad {
-                    format!("[{}]", self.card.trad)
-                } else {
-                    "".into()
-                }
-            ),
-            TITLE_SIZE,
-        );
-
-        let rect = Rect::from_min_max(
-            pos2(MARGIN * 2.0, TITLE_SIZE + MARGIN + TEXT_SIZE + MARGIN * 5.0),
-            pos2(WIDTH - MARGIN * 2.0, HEIGHT * RATIO - MARGIN * 2.0),
-        );
-
-        let frame = egui::Frame::none()
-            .fill(Color32::from_rgb(130, 176, 255))
-            .rounding(ROUNDING)
-            .paint(rect);
-
-        ui.painter().add(frame);
-
-        ui.allocate_ui_at_rect(rect, |ui| {
-            egui::ScrollArea::vertical().show(ui, |ui| {
-                ui.add(Label::new(RichText::new(&self.card.def).size(TEXT_SIZE)));
-            });
+                // self.front_side = true;
+            }
         });
-
-        let button = egui::Button::new("Next Card");
-        if ui.put(BUTTON_RECT, button).clicked() {
-            let (next_strength, mut next_card) = self.reviewer.next_card().expect("All done!");
-
-            std::mem::swap(&mut self.card, &mut next_card);
-            let old_card = next_card;
-
-            // todo: change self.strength
-            self.next_reviewer.studied_card(old_card, self.strength);
-            self.strength = next_strength;
-
-            self.front_side = true;
-        }
+        // panic!()
     }
-
-    /// create a container with text
-    fn create_cont_card(
-        &self,
-        ui: &mut Ui,
-        rect: Rect,
-        color: Color32,
-        text: impl Into<String>,
-        text_size: f32,
-    ) {
-        let frame = egui::Frame::none()
-            .fill(color)
-            .rounding(ROUNDING)
-            .paint(rect);
-
-        ui.painter().add(frame);
-
-        ui.put(rect, Label::new(RichText::new(text).size(text_size)));
-    }
-
-    fn create_scroll_card(
-        &self,
-        ui: &mut Ui,
-        rect: Rect,
-        color: Color32,
-        text: impl Into<String>,
-        text_size: f32,
-    ) {
-        let frame = egui::Frame::none()
-            .fill(color)
-            .rounding(ROUNDING)
-            .paint(rect);
-
-        ui.painter().add(frame);
-
-        ui.push_id(32, |ui| {
-            ui.allocate_ui_at_rect(rect, |ui| {
-                egui::ScrollArea::horizontal()
-                    .max_width(rect.width())
-                    .show(ui, |ui| {
-                        ui.scope(|ui| {
-                            ui.style_mut().wrap = Some(false);
-                            ui.centered_and_justified(|ui| {
-                                ui.add(Label::new(RichText::new(text).size(text_size)));
-                            });
-                        });
-                    });
-            });
-        });
-    }
-    */
 }
 
 impl eframe::App for MyEguiApp {

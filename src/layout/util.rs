@@ -3,10 +3,16 @@ use eframe::{
     epaint::Color32,
 };
 
-/// shorthand for
+/// Rect Corners, shorthand for
 /// `Rect::from_min_max(pos2(x1, y1), pos2(x2, y2))`
-pub fn rect(x1: f32, y1: f32, x2: f32, y2: f32) -> Rect {
+pub fn rect_c(x1: f32, y1: f32, x2: f32, y2: f32) -> Rect {
     Rect::from_min_max(pos2(x1, y1), pos2(x2, y2))
+}
+
+/// Rect Width-Height, shorthand for
+/// `Rect::from_min_max(pos2(x, y), pos2(x + w, y + h))`
+pub fn rect_wh(x: f32, y: f32, w: f32, h: f32) -> Rect {
+    rect_c(x, y, x + w, y + h)
 }
 
 pub fn color(r: u8, g: u8, b: u8) -> Color32 {

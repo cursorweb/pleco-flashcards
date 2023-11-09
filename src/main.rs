@@ -112,7 +112,7 @@ impl MyEguiApp {
                 let mut layout = VLayout::from(rect);
 
                 // pinyin
-                layout.ratio(0.1, |rect| {
+                layout.ratio(0.15, |rect| {
                     let pinyin = Cont::new(rect, color(234, 123, 231));
                     pinyin.add_text(ui, &self.card.pinyin, TEXT_SIZE);
                 });
@@ -193,24 +193,27 @@ impl MyEguiApp {
             });
         });
 
+        // debug
+        /*
         {
-            // use pleco_study::rect as r;
+            use pleco_study::rect as r;
 
-            // let rect = r(MARGIN, MARGIN, WIDTH - MARGIN, 200.0);
+            let rect = r(MARGIN, MARGIN, WIDTH - MARGIN, 200.0);
 
-            // let frame = egui::Frame::none().fill(color(0, 0, 0)).paint(rect);
-            // ui.painter().add(frame);
+            let frame = egui::Frame::none().fill(color(0, 0, 0)).paint(rect);
+            ui.painter().add(frame);
 
-            // let rect = r(MARGIN, MARGIN, WIDTH / 2.0 - MARGIN, 200.0);
+            let rect = r(MARGIN, MARGIN, WIDTH / 2.0 - MARGIN, 200.0);
 
-            // let frame = egui::Frame::none().fill(color(99, 3, 64)).paint(rect);
-            // ui.painter().add(frame);
+            let frame = egui::Frame::none().fill(color(99, 3, 64)).paint(rect);
+            ui.painter().add(frame);
 
-            // let rect = r(MARGIN + WIDTH / 2.0 - MARGIN, MARGIN, WIDTH - MARGIN, 200.0);
+            let rect = r(MARGIN + WIDTH / 2.0 - MARGIN, MARGIN, WIDTH - MARGIN, 200.0);
 
-            // let frame = egui::Frame::none().fill(color(99, 3, 64)).paint(rect);
-            // ui.painter().add(frame);
+            let frame = egui::Frame::none().fill(color(99, 3, 64)).paint(rect);
+            ui.painter().add(frame);
         }
+        */
 
         layout.ratio_vsplit(0.5, |rect| {
             let button = egui::Button::new("Next Card");

@@ -63,7 +63,7 @@ impl VLayout {
     }
 
     /// vertical ratio (as opposed to horizontal stacks)
-    /// uses rest of height ...
+    /// uses rest of height
     pub fn ratio_vsplit(&mut self, ratio: f32, draw: impl FnOnce(Rect)) {
         // println!("before xo: {}/{WIDTH}", self.x_offset);
         let width = self.remw() * ratio;

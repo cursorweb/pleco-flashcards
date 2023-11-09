@@ -75,7 +75,7 @@ impl MyEguiApp {
             style.visuals.override_text_color = Some(Color32::BLACK);
         });
 
-        let mut reviewer = Reviewer::load_cards("one_flash.txt");
+        let mut reviewer = Reviewer::load_cards("flash.txt");
         let (strength, card) = reviewer.next_card().expect("Should not be empty");
 
         Self {
@@ -189,57 +189,35 @@ impl MyEguiApp {
             });
         });
 
-        {
-            // use pleco_study::rect as r;
-
-            // let rect = r(MARGIN, MARGIN, WIDTH - MARGIN, 200.0);
-
-            // let frame = egui::Frame::none().fill(color(0, 0, 0)).paint(rect);
-            // ui.painter().add(frame);
-
-            // let rect = r(MARGIN, MARGIN, WIDTH / 2.0 - MARGIN, 200.0);
-
-            // let frame = egui::Frame::none().fill(color(99, 3, 64)).paint(rect);
-            // ui.painter().add(frame);
-
-            // let rect = r(MARGIN + WIDTH / 2.0 - MARGIN, MARGIN, WIDTH - MARGIN, 200.0);
-
-            // let frame = egui::Frame::none().fill(color(99, 3, 64)).paint(rect);
-            // ui.painter().add(frame);
-        }
-
         layout.ratio_vsplit(0.5, |rect| {
-            let button = egui::Button::new("Next Card");
+            let button = egui::Button::new("Wrong");
             if ui.put(rect, button).clicked() {
-                let (next_strength, mut next_card) = self.reviewer.next_card().expect("All done!");
-
-                std::mem::swap(&mut self.card, &mut next_card);
-                let old_card = next_card;
-
-                // todo: change self.strength
-                self.next_reviewer.studied_card(old_card, self.strength);
-                self.strength = next_strength;
-
-                self.front_side = true;
+                self.grade_card(-1);
             }
         });
 
         layout.ratio_vsplit(1.0, |rect| {
             let button = egui::Button::new("Correct");
             if ui.put(rect, button).clicked() {
-                // let (next_strength, mut next_card) = self.reviewer.next_card().expect("All done!");
-
-                // std::mem::swap(&mut self.card, &mut next_card);
-                // let old_card = next_card;
-
-                // // todo: change self.strength
-                // self.next_reviewer.studied_card(old_card, self.strength);
-                // self.strength = next_strength;
-
-                // self.front_side = true;
+                self.grade_card(1);
             }
         });
         // panic!()
+    }
+
+    fn grade_card(&mut self, dstrength: i32) {
+        let (next_strength, mut next_card) = self.reviewer.next_card().expect("All done!");
+
+        // self.card = next_card;
+        std::mem::swap(&mut self.card, &mut next_card);
+        let old_card = next_card;
+
+        self.next_reviewer
+            .studied_card(old_card, self.strength + dstrength);
+
+        self.strength = next_strength;
+
+        self.front_side = true;
     }
 }
 

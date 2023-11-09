@@ -75,14 +75,14 @@ impl MyEguiApp {
             style.visuals.override_text_color = Some(Color32::BLACK);
         });
 
-        let mut reviewer = Reviewer::load_cards("one_flash.txt");
+        let mut reviewer = Reviewer::load_cards("flash.txt");
         let (strength, card) = reviewer.next_card().expect("Should not be empty");
 
         Self {
             reviewer,
             card,
             strength,
-            front_side: false,
+            front_side: true,
             next_reviewer: Reviewer::new(),
         }
     }
@@ -111,11 +111,13 @@ impl MyEguiApp {
             def.add_ui(ui, |ui, rect| {
                 let mut layout = VLayout::from(rect);
 
+                // pinyin
                 layout.ratio(0.1, |rect| {
                     let pinyin = Cont::new(rect, color(234, 123, 231));
                     pinyin.add_text(ui, &self.card.pinyin, TEXT_SIZE);
                 });
 
+                // hanzi
                 layout.ratio(0.3, |rect| {
                     let word = Cont::new(rect, color(255, 255, 255));
                     let label = text_label(
@@ -134,6 +136,7 @@ impl MyEguiApp {
 
                     let label_rect = label.layout_in_ui(ui).2.rect;
 
+                    // until we can find a way to avoid clone D:
                     let label = text_label(
                         format!(
                             "{}{}",
@@ -165,6 +168,7 @@ impl MyEguiApp {
                     });
                 });
 
+                // definition
                 layout.rest(|rect| {
                     let def = Cont::new(rect, color(130, 176, 255));
                     def.add_ui(ui, |ui, rect| {

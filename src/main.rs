@@ -9,6 +9,7 @@ use font_kit::{
 use pleco_study::{color, config::*, scroll_area, text_label, Card, Cont, Reviewer, VLayout};
 
 const RATIO: f32 = 0.75;
+const CARD_LOCATION: &str = "dbg_flash.txt";
 
 fn main() {
     let mut native_options = eframe::NativeOptions::default();
@@ -18,24 +19,33 @@ fn main() {
     eframe::run_native(
         "Pleco Card Review",
         native_options,
-        Box::new(|cc| Box::new(MyEguiApp::new(cc))),
+        Box::new(|cc| Box::new(PlecoApp::new(cc))),
     )
     .unwrap();
 }
 
-struct MyEguiApp {
+struct PlecoApp {
     reviewer: Reviewer,
     card: Card,
     strength: i32,
 
     /// show the front side (simp) or back side (trad & pinyin)
-    front_side: bool,
+    card_state: CardState,
 
     /// next reviewer with the new strengths
     next_reviewer: Reviewer,
 }
 
-impl MyEguiApp {
+enum CardState {
+    /// no definitions
+    Front,
+    /// definitions
+    Back,
+    /// results
+    Results,
+}
+
+impl PlecoApp {
     fn load_fonts(cc: &eframe::CreationContext<'_>) {
         let source = SystemSource::new();
         let font =
@@ -75,14 +85,14 @@ impl MyEguiApp {
             style.visuals.override_text_color = Some(Color32::BLACK);
         });
 
-        let mut reviewer = Reviewer::load_cards("flash.txt");
+        let mut reviewer = Reviewer::load_cards(CARD_LOCATION);
         let (strength, card) = reviewer.next_card().expect("Should not be empty");
 
         Self {
             reviewer,
             card,
             strength,
-            front_side: true,
+            card_state: CardState::Front,
             next_reviewer: Reviewer::new(),
         }
     }
@@ -98,7 +108,7 @@ impl MyEguiApp {
         layout.rest(|rect| {
             let button = egui::Button::new("Flip");
             if ui.put(rect, button).clicked() {
-                self.front_side = false;
+                self.card_state = CardState::Back;
             }
         });
     }
@@ -194,45 +204,71 @@ impl MyEguiApp {
         });
 
         layout.ratio_vsplit(0.5, |rect| {
-            let button = egui::Button::new("Wrong");
-            if ui.put(rect, button).clicked() {
-                self.grade_card(-1);
-            }
-        });
-
-        layout.ratio_vsplit(1.0, |rect| {
-            let button = egui::Button::new("Correct");
+            let button = egui::Button::new("Correct").fill(color(94, 227, 79));
             if ui.put(rect, button).clicked() {
                 self.grade_card(1);
             }
         });
-        // panic!()
+
+        layout.ratio_vsplit(1.0, |rect| {
+            let button = egui::Button::new("Wrong").fill(color(232, 77, 77));
+            if ui.put(rect, button).clicked() {
+                self.grade_card(-1);
+            }
+        });
+    }
+
+    fn results(&mut self, ui: &mut Ui) {
+        let mut layout = VLayout::new();
+
+        layout.ratio(RATIO, |rect| {
+            let cont = Cont::new(rect, color(123, 123, 233));
+            cont.add_text(
+                ui,
+                format!(
+                    "{}/{} ({}%)",
+                    self.reviewer.correct,
+                    self.reviewer.total,
+                    (self.reviewer.correct as f32 / self.reviewer.total as f32) * 100.0
+                ),
+                TITLE_SIZE,
+            );
+        });
+
+        layout.rest(|rect| {
+            let button = egui::Button::new("Continue");
+            if ui.put(rect, button).clicked() {
+                println!("todo");
+                // self.card_state = CardState::Front;
+            }
+        });
     }
 
     fn grade_card(&mut self, dstrength: i32) {
-        let (next_strength, mut next_card) = self.reviewer.next_card().expect("All done!");
+        let Some((next_strength, mut next_card)) = self.reviewer.next_card() else {
+            self.card_state = CardState::Results;
+            return;
+        };
 
         // self.card = next_card;
         std::mem::swap(&mut self.card, &mut next_card);
         let old_card = next_card;
 
         self.next_reviewer
-            .studied_card(old_card, self.strength + dstrength);
+            .studied_card(&mut self.reviewer, old_card, self.strength + dstrength);
 
         self.strength = next_strength;
 
-        self.front_side = true;
+        self.card_state = CardState::Front;
     }
 }
 
-impl eframe::App for MyEguiApp {
+impl eframe::App for PlecoApp {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
-        egui::CentralPanel::default().show(ctx, |ui| {
-            if self.front_side {
-                self.render_front(ui);
-            } else {
-                self.render_back(ui);
-            }
+        egui::CentralPanel::default().show(ctx, |ui| match self.card_state {
+            CardState::Front => self.render_front(ui),
+            CardState::Back => self.render_back(ui),
+            CardState::Results => self.results(ui),
         });
     }
 }

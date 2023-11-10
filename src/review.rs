@@ -5,13 +5,16 @@ use std::{collections::HashMap, fs};
 #[derive(Debug)]
 pub struct Reviewer {
     /// current set of cards
-    pub cards: HashMap<i32, Vec<Card>>,
+    cards: HashMap<i32, Vec<Card>>,
 
     /// the lowest score
-    pub lowest: i32,
+    lowest: i32,
 
     /// highest score (non-inclusive)
-    pub highest: i32,
+    highest: i32,
+
+    pub correct: i32,
+    pub total: i32,
 }
 
 impl Reviewer {
@@ -20,6 +23,8 @@ impl Reviewer {
             cards: HashMap::new(),
             lowest: i32::MAX,
             highest: i32::MIN,
+            correct: 0,
+            total: 0,
         }
     }
 
@@ -52,6 +57,8 @@ impl Reviewer {
             cards,
             lowest: 0,
             highest: 1,
+            correct: 0,
+            total: 0,
         }
     }
 
@@ -75,7 +82,8 @@ impl Reviewer {
     }
 
     /// Make sure this is used on the next reviewer!
-    pub fn studied_card(&mut self, card: Card, score: i32) {
+    /// Arguments: `(&mut new, &mut old, ...)`
+    pub fn studied_card(&mut self, old: &mut Self, card: Card, score: i32) {
         if score < self.lowest {
             self.lowest = score;
         }
@@ -83,6 +91,12 @@ impl Reviewer {
         if score > self.highest {
             self.highest = score;
         }
+
+        // adjust accuracy
+        if score > 0 {
+            old.correct += 1;
+        }
+        old.total += 1;
 
         self.cards.entry(score).or_insert(Vec::new()).push(card);
     }

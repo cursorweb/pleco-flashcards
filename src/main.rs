@@ -85,7 +85,7 @@ impl PlecoApp {
             style.visuals.override_text_color = Some(Color32::BLACK);
         });
 
-        let mut reviewer = Reviewer::load_cards(CARD_LOCATION);
+        let mut reviewer = Reviewer::load_export(CARD_LOCATION);
         let (strength, card) = reviewer.next_card().expect("Should not be empty");
 
         Self {
@@ -238,7 +238,7 @@ impl PlecoApp {
         layout.rest(|rect| {
             let button = egui::Button::new("Continue");
             if ui.put(rect, button).clicked() {
-                println!("todo");
+                self.next_reviewer.save();
                 // self.card_state = CardState::Front;
             }
         });

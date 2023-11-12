@@ -1,5 +1,6 @@
 use crate::Card;
 use rand::prelude::*;
+use serde_json;
 use std::{collections::HashMap, fs};
 
 #[derive(Debug)]
@@ -28,7 +29,8 @@ impl Reviewer {
         }
     }
 
-    pub fn load_cards(file: &str) -> Self {
+    /// Create a new reviewer from an exported file
+    pub fn load_export(file: &str) -> Self {
         let text = fs::read_to_string(file).unwrap();
         let mut card_vec: Vec<Card> = text
             .lines()
@@ -99,6 +101,29 @@ impl Reviewer {
         old.total += 1;
 
         self.cards.entry(score).or_insert(Vec::new()).push(card);
+    }
+
+    /// adjust the scores
+    /// for example, if the lowest score is `-1`
+    /// every score will be subtracted by `-1`
+    fn adjust_scores(&mut self) {
+        self.highest -= self.lowest;
+        let mut new_cards: HashMap<i32, _> = HashMap::new();
+
+        // let cards = self.cards;
+        let mut cards = HashMap::new();
+        std::mem::swap(&mut self.cards, &mut cards);
+
+        for (key, val) in cards {
+            new_cards.insert(key - self.lowest, val);
+        }
+
+        self.cards = new_cards;
+    }
+
+    pub fn save(&mut self) {
+        self.adjust_scores();
+        let x = serde_json::to_string(&self.cards).unwrap();
     }
 }
 

@@ -1,6 +1,7 @@
 use eframe::{
     egui::{self, Color32, FontData, FontDefinitions, Ui},
     epaint::{FontFamily, Vec2},
+    App,
 };
 use font_kit::{
     family_name::FamilyName, handle::Handle, properties::Properties, source::SystemSource,
@@ -24,20 +25,24 @@ fn main() {
     .unwrap();
 }
 
+#[derive(serde::Deserialize, serde::Serialize)]
 struct PlecoApp {
     reviewer: Reviewer,
     card: Card,
     strength: i32,
 
     /// show the front side (simp) or back side (trad & pinyin)
+    #[serde(skip_serializing, skip_deserializing)]
     card_state: CardState,
 
     /// next reviewer with the new strengths
     next_reviewer: Reviewer,
 }
 
+#[derive(Default)]
 enum CardState {
     /// no definitions
+    #[default]
     Front,
     /// definitions
     Back,
@@ -84,6 +89,12 @@ impl PlecoApp {
         cc.egui_ctx.style_mut(|style| {
             style.visuals.override_text_color = Some(Color32::BLACK);
         });
+
+        if let Some(storage) = cc.storage {
+            if let Some(save) = eframe::get_value(storage, eframe::APP_KEY) {
+                return save;
+            }
+        }
 
         let mut reviewer = Reviewer::load_export(CARD_LOCATION);
         let (strength, card) = reviewer.next_card().expect("Should not be empty");
@@ -218,7 +229,7 @@ impl PlecoApp {
         });
     }
 
-    fn results(&mut self, ui: &mut Ui) {
+    fn results(&mut self, ui: &mut Ui, storage: &mut dyn eframe::Storage) {
         let mut layout = VLayout::new();
 
         layout.ratio(RATIO, |rect| {
@@ -238,12 +249,21 @@ impl PlecoApp {
         layout.rest(|rect| {
             let button = egui::Button::new("Continue");
             if ui.put(rect, button).clicked() {
-                self.next_reviewer.save();
-                // self.card_state = CardState::Front;
+                // all the cards are guaranteed to be here
+                self.next_reviewer.adjust_scores();
+                self.save(storage);
+
+                // self.reviewer = self.next_reviewer;
+                std::mem::swap(&mut self.reviewer, &mut self.next_reviewer);
+
+                self.next_reviewer = Reviewer::new();
+                self.card_state = CardState::Front;
             }
         });
     }
 
+    /// Grades a card
+    /// dstrength should be `1`, `-1`
     fn grade_card(&mut self, dstrength: i32) {
         let Some((next_strength, mut next_card)) = self.reviewer.next_card() else {
             self.card_state = CardState::Results;
@@ -264,11 +284,15 @@ impl PlecoApp {
 }
 
 impl eframe::App for PlecoApp {
-    fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
+    fn update(&mut self, ctx: &egui::Context, frame: &mut eframe::Frame) {
         egui::CentralPanel::default().show(ctx, |ui| match self.card_state {
             CardState::Front => self.render_front(ui),
             CardState::Back => self.render_back(ui),
-            CardState::Results => self.results(ui),
+            CardState::Results => self.results(ui, frame.storage_mut().unwrap()),
         });
+    }
+
+    fn save(&mut self, storage: &mut dyn eframe::Storage) {
+        eframe::set_value(storage, eframe::APP_KEY, self);
     }
 }

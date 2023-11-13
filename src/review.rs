@@ -1,9 +1,8 @@
 use crate::Card;
 use rand::prelude::*;
-use serde_json;
 use std::{collections::HashMap, fs};
 
-#[derive(Debug)]
+#[derive(Debug, serde::Serialize, serde::Deserialize)]
 pub struct Reviewer {
     /// current set of cards
     cards: HashMap<i32, Vec<Card>>,
@@ -106,7 +105,7 @@ impl Reviewer {
     /// adjust the scores
     /// for example, if the lowest score is `-1`
     /// every score will be subtracted by `-1`
-    fn adjust_scores(&mut self) {
+    pub fn adjust_scores(&mut self) {
         self.highest -= self.lowest;
         let mut new_cards: HashMap<i32, _> = HashMap::new();
 
@@ -121,10 +120,20 @@ impl Reviewer {
         self.cards = new_cards;
     }
 
+    /*
     pub fn save(&mut self) {
         self.adjust_scores();
-        let x = serde_json::to_string(&self.cards).unwrap();
+
+        let file = OpenOptions::new()
+            .write(true)
+            .create_new(true)
+            .open("words.json")
+            .unwrap();
+
+        let writer = BufWriter::new(file);
+        serde_json::to_writer(writer, &self.cards).unwrap();
     }
+    */
 }
 
 fn parse_trad(text: String) -> (String, String) {

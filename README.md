@@ -12,6 +12,13 @@ Streamlined way to review chinese characters.
 Please use the `.txt` export and NOT the `.xml` export.
 Choose charset `utf8`, choose both character sets, choose **card definitions**, **dictionary definitions** and **(remap if unexportable)**
 
+## Clear Data
+Clear all data with
+```sh
+cd "C:\Users\rqhua\AppData\Roaming\Pleco Card Review"
+explorer .
+```
+
 ## Score-Based System
 The score-based system is as follows:
 * Each card starts with **0** as the score.

@@ -12,9 +12,6 @@ pub struct Reviewer {
 
     /// highest score (non-inclusive)
     highest: i32,
-
-    pub correct: i32,
-    pub total: i32,
 }
 
 impl Reviewer {
@@ -23,8 +20,6 @@ impl Reviewer {
             cards: HashMap::new(),
             lowest: i32::MAX,
             highest: i32::MIN,
-            correct: 0,
-            total: 0,
         }
     }
 
@@ -58,46 +53,35 @@ impl Reviewer {
             cards,
             lowest: 0,
             highest: 1,
-            correct: 0,
-            total: 0,
         }
     }
 
     /// returns `None` if there are no more cards.
     pub fn next_card(&mut self) -> Option<(i32, Card)> {
-        let mut cards = self.cards.get_mut(&self.lowest).unwrap();
+        for i in self.lowest..self.highest {
+            let cards = self.cards.get_mut(&i);
 
-        while cards.is_empty() {
-            self.lowest += 1;
-            if self.lowest == self.highest {
-                return None;
+            if let Some(cards) = cards {
+                if let Some(card) = cards.pop() {
+                    self.lowest = i;
+                    return Some((self.lowest, card));
+                }
             }
-
-            cards = self.cards.get_mut(&self.lowest).unwrap();
         }
 
-        Some((
-            self.lowest,
-            cards.pop().expect("card group should be nonempty"),
-        ))
+        None
     }
 
     /// Make sure this is used on the next reviewer!
-    /// Arguments: `(&mut new, &mut old, ...)`
-    pub fn studied_card(&mut self, old: &mut Self, card: Card, score: i32) {
+    /// Arguments: `(&mut new, ...)`
+    pub fn studied_card(&mut self, card: Card, score: i32) {
         if score < self.lowest {
             self.lowest = score;
         }
 
-        if score > self.highest {
-            self.highest = score;
+        if score >= self.highest {
+            self.highest = score + 1;
         }
-
-        // adjust accuracy
-        if score > 0 {
-            old.correct += 1;
-        }
-        old.total += 1;
 
         self.cards.entry(score).or_insert(Vec::new()).push(card);
     }
@@ -119,21 +103,6 @@ impl Reviewer {
 
         self.cards = new_cards;
     }
-
-    /*
-    pub fn save(&mut self) {
-        self.adjust_scores();
-
-        let file = OpenOptions::new()
-            .write(true)
-            .create_new(true)
-            .open("words.json")
-            .unwrap();
-
-        let writer = BufWriter::new(file);
-        serde_json::to_writer(writer, &self.cards).unwrap();
-    }
-    */
 }
 
 fn parse_trad(text: String) -> (String, String) {

@@ -28,8 +28,14 @@ fn main() {
 #[derive(serde::Deserialize, serde::Serialize)]
 struct PlecoApp {
     reviewer: Reviewer,
-    card: Card,
+    card: Option<Card>,
     strength: i32,
+
+    /// show the total correct for this session
+    #[serde(skip_serializing, skip_deserializing)]
+    correct: i32,
+    #[serde(skip_serializing, skip_deserializing)]
+    total: i32,
 
     /// show the front side (simp) or back side (trad & pinyin)
     #[serde(skip_serializing, skip_deserializing)]
@@ -101,19 +107,23 @@ impl PlecoApp {
 
         Self {
             reviewer,
-            card,
+            card: Some(card),
             strength,
             card_state: CardState::Front,
             next_reviewer: Reviewer::new(),
+            correct: 0,
+            total: 0,
         }
     }
 
     fn render_front(&mut self, ui: &mut Ui) {
         let mut layout = VLayout::new();
 
+        let card = self.card.as_ref().unwrap();
+
         layout.ratio(RATIO, |rect| {
             let cont = Cont::new(rect, color(123, 123, 233));
-            cont.add_text(ui, &self.card.simp, TITLE_SIZE);
+            cont.add_text(ui, &card.simp, TITLE_SIZE);
         });
 
         layout.rest(|rect| {
@@ -126,6 +136,7 @@ impl PlecoApp {
 
     fn render_back(&mut self, ui: &mut Ui) {
         let mut layout = VLayout::new();
+        let card = self.card.as_ref().unwrap();
 
         layout.ratio(RATIO, |rect| {
             let def = Cont::new(rect, color(6, 209, 20));
@@ -135,7 +146,7 @@ impl PlecoApp {
                 // pinyin
                 layout.ratio(0.15, |rect| {
                     let pinyin = Cont::new(rect, color(234, 123, 231));
-                    pinyin.add_text(ui, &self.card.pinyin, TEXT_SIZE);
+                    pinyin.add_text(ui, &card.pinyin, TEXT_SIZE);
                 });
 
                 // hanzi
@@ -144,9 +155,9 @@ impl PlecoApp {
                     let label = text_label(
                         format!(
                             "{}{}",
-                            self.card.simp,
-                            if self.card.simp != self.card.trad {
-                                format!("[{}]", self.card.trad)
+                            card.simp,
+                            if card.simp != card.trad {
+                                format!("[{}]", card.trad)
                             } else {
                                 "".into()
                             }
@@ -161,9 +172,9 @@ impl PlecoApp {
                     let label = text_label(
                         format!(
                             "{}{}",
-                            self.card.simp,
-                            if self.card.simp != self.card.trad {
-                                format!("[{}]", self.card.trad)
+                            card.simp,
+                            if card.simp != card.trad {
+                                format!("[{}]", card.trad)
                             } else {
                                 "".into()
                             }
@@ -205,7 +216,7 @@ impl PlecoApp {
                             "defn-scroll",
                             rect,
                             |ui| {
-                                ui.add(text_label(&self.card.def, TEXT_SIZE, true));
+                                ui.add(text_label(&card.def, TEXT_SIZE, true));
                             },
                             [false, true],
                         );
@@ -238,9 +249,9 @@ impl PlecoApp {
                 ui,
                 format!(
                     "{}/{} ({}%)",
-                    self.reviewer.correct,
-                    self.reviewer.total,
-                    (self.reviewer.correct as f32 / self.reviewer.total as f32) * 100.0
+                    self.correct,
+                    self.total,
+                    (self.correct as f32 / self.total as f32) * 100.0
                 ),
                 TITLE_SIZE,
             );
@@ -250,13 +261,19 @@ impl PlecoApp {
             let button = egui::Button::new("Continue");
             if ui.put(rect, button).clicked() {
                 // all the cards are guaranteed to be here
-                self.next_reviewer.adjust_scores();
+                // self.next_reviewer.adjust_scores();
+                // println!("{:?}", self.next_reviewer);
                 self.save(storage);
 
                 // self.reviewer = self.next_reviewer;
                 std::mem::swap(&mut self.reviewer, &mut self.next_reviewer);
 
                 self.next_reviewer = Reviewer::new();
+                let (strength, card) = self.reviewer.next_card().expect("should not be empty");
+
+                self.card = Some(card);
+                self.strength = strength;
+
                 self.card_state = CardState::Front;
             }
         });
@@ -265,21 +282,29 @@ impl PlecoApp {
     /// Grades a card
     /// dstrength should be `1`, `-1`
     fn grade_card(&mut self, dstrength: i32) {
-        let Some((next_strength, mut next_card)) = self.reviewer.next_card() else {
+        let old_card = if let Some((next_strength, next_card)) = self.reviewer.next_card() {
+            let old_card = self.card.take();
+            self.card = Some(next_card);
+
+            self.strength = next_strength;
+            self.card_state = CardState::Front;
+
+            old_card.unwrap()
+        } else {
             self.card_state = CardState::Results;
-            return;
+
+            self.card.take().unwrap()
         };
 
-        // self.card = next_card;
-        std::mem::swap(&mut self.card, &mut next_card);
-        let old_card = next_card;
+        // adjust accuracy
+        if dstrength > 0 {
+            self.correct += 1;
+        }
+
+        self.total += 1;
 
         self.next_reviewer
-            .studied_card(&mut self.reviewer, old_card, self.strength + dstrength);
-
-        self.strength = next_strength;
-
-        self.card_state = CardState::Front;
+            .studied_card(old_card, self.strength + dstrength);
     }
 }
 

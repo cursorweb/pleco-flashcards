@@ -38,12 +38,6 @@ impl VLayout {
             height - MARGIN,
         );
 
-        // println!(
-        //     "width: {width} : drawing from x1={} to x2={}",
-        //     self.left + self.x_offset,
-        //     self.left + self.x_offset + width - MARGIN
-        // );
-
         draw(rect);
     }
 
@@ -68,13 +62,11 @@ impl VLayout {
     /// vertical ratio (as opposed to horizontal stacks)
     /// uses rest of height
     pub fn ratio_vsplit(&mut self, ratio: f32, draw: impl FnOnce(Rect)) {
-        // println!("before xo: {}/{WIDTH}", self.x_offset);
         let width = self.remw() * ratio;
 
         self.draw(width, self.remh(), draw);
 
         self.x_offset += width;
-        // println!("after xo: {}/{WIDTH}", self.x_offset);
     }
 
     /// Gives rest of height

@@ -1,6 +1,2 @@
 ﻿对[对]	dui	make this correct
 错[错]	cuo	make this wrong
-大[对]	cuo	make this correct
-小[错]	dui	make this wrong
-好[对]	dui	make this correct
-坏[错]	cuo	make this wrong
